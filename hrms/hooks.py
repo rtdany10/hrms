@@ -114,7 +114,7 @@ has_upload_permission = {
 
 override_doctype_class = {
 	"Employee": "hrms.overrides.employee_master.EmployeeMaster",
-	"Timesheet": "hrms.overrides.employee_timesheet.EmployeeTimesheet",
+	# "Timesheet": "hrms.overrides.employee_timesheet.EmployeeTimesheet",
 	"Payment Entry": "hrms.overrides.employee_payment_entry.EmployeePaymentEntry",
 	"Project": "hrms.overrides.employee_project.EmployeeProject",
 }
