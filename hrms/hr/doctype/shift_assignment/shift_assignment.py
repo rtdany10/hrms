@@ -11,9 +11,6 @@ from frappe.model.document import Document
 from frappe.query_builder import Criterion
 from frappe.utils import cstr, get_datetime, get_link_to_form, get_time, getdate, now_datetime
 
-from erpnext.setup.doctype.employee.employee import get_holiday_list_for_employee
-from erpnext.setup.doctype.holiday_list.holiday_list import is_holiday
-
 from hrms.hr.utils import validate_active_employee
 
 
@@ -176,6 +173,7 @@ def add_assignments(start, end, conditions=None):
 				"title": cstr(d.employee_name) + ": " + cstr(d.shift_type),
 				"docstatus": d.docstatus,
 				"allDay": 0,
+				"convertToUserTz": 0,
 			}
 			if e not in events:
 				events.append(e)
@@ -275,7 +273,7 @@ def get_employee_shift(
 	consider_default_shift: bool = False,
 	next_shift_direction: str = None,
 ) -> Dict:
-	"""Returns a Shift Type for the given employee on the given date. (excluding the holidays)
+	"""Returns a Shift Type for the given employee on the given date
 
 	:param employee: Employee for which shift is required.
 	:param for_timestamp: DateTime on which shift is required
@@ -291,10 +289,6 @@ def get_employee_shift(
 	default_shift = frappe.db.get_value("Employee", employee, "default_shift")
 	if not shift_details and consider_default_shift:
 		shift_details = get_shift_details(default_shift, for_timestamp)
-
-	# if its a holiday, reset
-	if shift_details and is_holiday_date(employee, shift_details):
-		shift_details = None
 
 	# if no shift is found, find next or prev shift assignment based on direction
 	if not shift_details and next_shift_direction:
@@ -351,17 +345,6 @@ def get_prev_or_next_shift(
 					break
 
 	return shift_details or {}
-
-
-def is_holiday_date(employee: str, shift_details: Dict) -> bool:
-	holiday_list_name = frappe.db.get_value(
-		"Shift Type", shift_details.shift_type.name, "holiday_list"
-	)
-
-	if not holiday_list_name:
-		holiday_list_name = get_holiday_list_for_employee(employee, False)
-
-	return holiday_list_name and is_holiday(holiday_list_name, shift_details.start_datetime.date())
 
 
 def get_employee_shift_timings(
