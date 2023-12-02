@@ -160,6 +160,7 @@ class ExpenseClaim(AccountsController):
 						"against_voucher_type": self.doctype,
 						"against_voucher": self.name,
 						"cost_center": self.cost_center,
+						"project": self.project,
 					},
 					item=self,
 				)
@@ -175,6 +176,7 @@ class ExpenseClaim(AccountsController):
 						"debit_in_account_currency": data.sanctioned_amount,
 						"against": self.employee,
 						"cost_center": data.cost_center or self.cost_center,
+						"project": data.project or self.project,
 					},
 					item=data,
 				)
@@ -241,7 +243,8 @@ class ExpenseClaim(AccountsController):
 						"debit": tax.tax_amount,
 						"debit_in_account_currency": tax.tax_amount,
 						"against": self.employee,
-						"cost_center": self.cost_center,
+						"cost_center": tax.cost_center or self.cost_center,
+						"project": tax.project or self.project,
 						"against_voucher_type": self.doctype,
 						"against_voucher": self.name,
 					},
@@ -265,32 +268,48 @@ class ExpenseClaim(AccountsController):
 	def calculate_total_amount(self):
 		self.total_claimed_amount = 0
 		self.total_sanctioned_amount = 0
+
 		for d in self.get("expenses"):
+			self.round_floats_in(d)
+
 			if self.approval_status == "Rejected":
 				d.sanctioned_amount = 0.0
 
 			self.total_claimed_amount += flt(d.amount)
 			self.total_sanctioned_amount += flt(d.sanctioned_amount)
 
+		self.round_floats_in(self, ["total_claimed_amount", "total_sanctioned_amount"])
+
 	@frappe.whitelist()
 	def calculate_taxes(self):
 		self.total_taxes_and_charges = 0
 		for tax in self.taxes:
+			self.round_floats_in(tax)
+
 			if tax.rate:
-				tax.tax_amount = flt(self.total_sanctioned_amount) * flt(tax.rate / 100)
+				tax.tax_amount = flt(
+					flt(self.total_sanctioned_amount) * flt(tax.rate / 100),
+					tax.precision("tax_amount"),
+				)
 
 			tax.total = flt(tax.tax_amount) + flt(self.total_sanctioned_amount)
 			self.total_taxes_and_charges += flt(tax.tax_amount)
+
+		self.round_floats_in(self, ["total_taxes_and_charges"])
 
 		self.grand_total = (
 			flt(self.total_sanctioned_amount)
 			+ flt(self.total_taxes_and_charges)
 			- flt(self.total_advance_amount)
 		)
+		self.round_floats_in(self, ["grand_total"])
 
 	def validate_advances(self):
 		self.total_advance_amount = 0
+
 		for d in self.get("advances"):
+			self.round_floats_in(d)
+
 			ref_doc = frappe.db.get_value(
 				"Employee Advance",
 				d.employee_advance,
@@ -312,6 +331,7 @@ class ExpenseClaim(AccountsController):
 			self.total_advance_amount += flt(d.allocated_amount)
 
 		if self.total_advance_amount:
+			self.round_floats_in(self, ["total_advance_amount"])
 			precision = self.precision("total_advance_amount")
 			amount_with_taxes = flt(
 				(flt(self.total_sanctioned_amount, precision) + flt(self.total_taxes_and_charges, precision)),

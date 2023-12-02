@@ -4,7 +4,7 @@ app_publisher = "Frappe Technologies Pvt. Ltd."
 app_description = "Modern HR and Payroll Software"
 app_email = "contact@frappe.io"
 app_license = "GNU General Public License (v3)"
-required_apps = ["erpnext"]
+required_apps = ["frappe/erpnext"]
 
 
 # Includes in <head>
@@ -42,7 +42,7 @@ doctype_js = {
 	"Timesheet": "public/js/erpnext/timesheet.js",
 	"Payment Entry": "public/js/erpnext/payment_entry.js",
 	"Journal Entry": "public/js/erpnext/journal_entry.js",
-	"Delivery Trip": "public/js/erpnext/deliver_trip.js",
+	"Delivery Trip": "public/js/erpnext/delivery_trip.js",
 	"Bank Transaction": "public/js/erpnext/bank_transaction.js",
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
@@ -164,6 +164,7 @@ doc_events = {
 	"Employee": {
 		"validate": "hrms.overrides.employee_master.validate_onboarding_process",
 		"on_update": "hrms.overrides.employee_master.update_approver_role",
+		"after_insert": "hrms.overrides.employee_master.update_job_applicant_and_offer",
 		"on_trash": "hrms.overrides.employee_master.update_employee_transfer",
 	},
 	"Project": {
@@ -218,7 +219,7 @@ bank_reconciliation_doctypes = ["Expense Claim"]
 # Testing
 # -------
 
-before_tests = "hrms.utils.before_tests"
+before_tests = "hrms.tests.test_utils.before_tests"
 
 # Overriding Methods
 # -----------------------------

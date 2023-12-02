@@ -183,13 +183,6 @@ def get_columns(earning_types, ded_types):
 			"fieldtype": "Float",
 			"width": 120,
 		},
-		{
-			"label": _("Currency"),
-			"fieldname": "currency",
-			"fieldtype": "Link",
-			"options": "Currency",
-			"hidden": 1,
-		},
 	]
 
 	for earning in earning_types:
@@ -228,7 +221,7 @@ def get_columns(earning_types, ded_types):
 		[
 			{
 				"label": _("Loan Repayment"),
-				"fieldname": "loan_repayment",
+				"fieldname": "total_loan_repayment",
 				"fieldtype": "Currency",
 				"options": "currency",
 				"width": 120,
@@ -247,9 +240,15 @@ def get_columns(earning_types, ded_types):
 				"options": "currency",
 				"width": 120,
 			},
+			{
+				"label": _("Currency"),
+				"fieldtype": "Data",
+				"fieldname": "currency",
+				"options": "Currency",
+				"hidden": 1,
+			},
 		]
 	)
-
 	return columns
 
 
